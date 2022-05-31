@@ -1,0 +1,235 @@
+{% extends "mychatapp/base.html" %}
+
+{% block content %}
+
+<style>
+    .forms{
+        border: 1px solid slateblue;
+        
+        width: 100%;
+        border-radius: 5px;
+        padding: 10px 10px;
+        font-size: 18px;
+    }
+</style>
+
+<div class="chat-container2">
+    <div class="identity">
+        <div>
+           <a href="{% url 'index' %}">
+            <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="26"
+            height="26"
+            fill="currentColor"
+            class="bi bi-house"
+            viewBox="0 0 16 16"
+          >
+            <path
+              fill-rule="evenodd"
+              d="M2 13.5V7h1v6.5a.5.5 0 0 0 .5.5h9a.5.5 0 0 0 .5-.5V7h1v6.5a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 2 13.5zm11-11V6l-2-2V2.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5z"
+            />
+            <path
+              fill-rule="evenodd"
+              d="M7.293 1.5a1 1 0 0 1 1.414 0l6.647 6.646a.5.5 0 0 1-.708.708L8 2.207 1.354 8.854a.5.5 0 1 1-.708-.708L7.293 1.5z"
+            />
+          </svg>
+           </a>
+        </div>
+
+        <h3>{{friend.profile.name}}</h3>
+
+        <div class="pro-pic">
+            <img src="{{friend.profile.pic.url}}" alt="profile-picture">
+        </div>
+
+
+    </div>
+
+    <div class="sub-container">
+
+
+        <div class="chat-body" id="chat-body">
+
+            
+            {% for chat in chats %}
+            {% if chat.msg_sender == user and chat.msg_receiver == profile %}
+
+            <div class="chat-box-sent">
+                {{chat}}
+            </div>
+
+            {% elif chat.msg_sender == profile and chat.msg_receiver == user %}
+
+            <div class="chat-box-received">
+                {{chat}}
+            </div>
+
+            {% endif %}
+
+
+
+            
+
+            {% endfor %}
+
+
+        
+
+            <div class="chat-box-sent" id ="chat-box-sent" style="display: none">
+               
+            </div>
+
+            
+        </div>
+    
+        <form action="" id="myform" method="POST">
+            {% csrf_token %}
+            
+            {{form.body}}
+            
+            <button type = "submit" id = "submit">Send</button>
+        </form>
+
+
+    </div>
+
+   
+
+
+
+</div>
+
+<script>
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                // Does this cookie string begin with the name we want?
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    const csrftoken = getCookie('csrftoken');
+
+    let form = document.getElementById("myform")
+    
+    form.addEventListener("submit", sendChat)
+
+    function sendChat(e){
+        e.preventDefault()
+        let chatMessage= document.getElementById("id_body").value
+        console.log(chatMessage)
+
+        const data = { msg: chatMessage };
+        
+        let url = "{% url 'sent_msg' friend.profile.id %}"
+
+fetch(url, {
+  method: 'POST', // or 'PUT'
+  headers: {
+    'Content-Type': 'application/json',
+    'X-CSRFToken': csrftoken
+  },
+  body: JSON.stringify(data),
+})
+.then(response => response.json())
+.then(data => {
+  console.log('Success:', data);
+  let chat_body = document.getElementById('chat-body')
+  let chatMessageBox = document.createElement("div")
+  chatMessageBox.classList.add("chat-box-sent")
+  chatMessageBox.innerText = data
+  chat_body.append(chatMessageBox)
+  document.getElementById("id_body").value=""
+})
+.catch((error) => {
+  console.error('Error:', error);
+});
+
+
+    }
+
+
+
+
+
+
+
+
+
+    
+
+setInterval(receiveMessages, 2000)
+
+
+let counter = {{num}}
+function receiveMessages(){
+
+
+    let url = "{% url 'rec_msg' friend.profile.id %}"
+
+        fetch(url)
+        .then(response => response.json())
+        .then(data => {
+        console.log('Success:', data);
+        
+        
+
+        if(data.length == 0){}
+
+        else{
+
+            let lastMsg = data[data.length-1]
+
+            if(counter == data.length){
+                console.log("there is no new chat")
+            }
+
+        
+        
+
+            else{
+
+
+                let chat_body = document.getElementById('chat-body')
+                let chatMessageBox = document.createElement("div")
+                
+                chatMessageBox.classList.add("chat-box-received")
+                chatMessageBox.innerText = lastMsg
+                chat_body.append(chatMessageBox)
+                document.getElementById("id_body").value=""
+                console.log()
+
+                console.log
+
+
+            }
+
+        }
+        
+        counter = data.length
+
+
+
+        })
+        .catch((error) => {
+        console.error('Error:', error);
+        });
+
+}
+
+
+
+</script>
+
+
+{% endblock %}
+
